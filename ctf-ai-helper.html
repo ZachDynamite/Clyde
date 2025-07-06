@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF AI Helper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #006bb4;
+            --primary-blue-hover: #005a94;
+            --primary-blue-light: #f0f9ff;
+            --accent-blue: #0369a1;
+            --success-green: #10b981;
+            --warning-amber: #f59e0b;
+            --error-red: #ef4444;
+            --bg-primary: #fafbfd;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f7f9fc;
+            --bg-code: #1e1e1e;
+            --bg-code-light: #f8f9fa;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --border-dark: #94a3b8;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --radius-xl: 12px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--primary-blue-light);
+            border: 1px solid rgba(0, 107, 180, 0.2);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent-blue);
+            transition: all 0.2s ease;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 32px;
+            min-height: calc(100vh - 160px);
+        }
+
+        .input-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            height: fit-content;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 120px;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            letter-spacing: -0.025em;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            letter-spacing: -0.01em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-secondary);
+            transition: all 0.2s ease;
+            resize: vertical;
+            min-height: 140px;
+            line-height: 1.5;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 107, 180, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .quick-action {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-action:hover {
+            background: var(--primary-blue-light);
+            border-color: rgba(0, 107, 180, 0.3);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-action:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: var(--text-tertiary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .output-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .output-header {
+            padding: 20px 28px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .output-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-blue-light);
+            border-color: rgba(0, 107, 180, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .copy-btn.copied {
+            background: var(--success-green);
+            color: white;
+            border-color: var(--success-green);
+        }
+
+        .output-content {
+            flex: 1;
+            padding: 28px;
+            font-family: 'JetBrains Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            background: var(--bg-code-light);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-light);
+            border-top: 2px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .welcome-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-blue-light), rgba(0, 107, 180, 0.1));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 32px;
+            border: 1px solid rgba(0, 107, 180, 0.1);
+        }
+
+        .welcome-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .welcome-state p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .error-message {
+            padding: 16px 20px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-lg);
+            color: #dc2626;
+            font-size: 14px;
+            margin-bottom: 24px;
+            display: none;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .response-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .response-header {
+            padding: 16px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .response-header::before {
+            content: "✨";
+            font-size: 14px;
+        }
+
+        .response-content {
+            padding: 24px;
+            font-family: 'JetBrains Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-code-light);
+            position: relative;
+            overflow-x: auto;
+        }
+
+        /* Syntax highlighting for code blocks */
+        .response-content .code-block {
+            background: var(--bg-code);
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            overflow-x: auto;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .response-content .code-block::before {
+            content: attr(data-language);
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .response-content .keyword {
+            color: #c792ea;
+            font-weight: 500;
+        }
+
+        .response-content .string {
+            color: #a3be8c;
+        }
+
+        .response-content .comment {
+            color: #636f88;
+            font-style: italic;
+        }
+
+        .response-content .function {
+            color: #82aaff;
+            font-weight: 500;
+        }
+
+        .response-content .variable {
+            color: #f07178;
+        }
+
+        /* Section headers in output */
+        .response-content h1, .response-content h2, .response-content h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin: 24px 0 12px 0;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.025em;
+        }
+
+        .response-content h1 {
+            font-size: 20px;
+            border-bottom: 2px solid var(--primary-blue);
+            padding-bottom: 8px;
+        }
+
+        .response-content h2 {
+            font-size: 18px;
+            color: var(--primary-blue);
+        }
+
+        .response-content h3 {
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        /* Inline code */
+        .response-content code {
+            background: rgba(0, 107, 180, 0.1);
+            color: var(--primary-blue);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Lists */
+        .response-content ul, .response-content ol {
+            margin: 16px 0;
+            padding-left: 20px;
+        }
+
+        .response-content li {
+            margin: 8px 0;
+            color: var(--text-primary);
+        }
+
+        .response-content li strong {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        /* Progress indicators */
+        .progress-bar {
+            width: 100%;
+            height: 2px;
+            background: var(--border-light);
+            border-radius: 1px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-blue));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 380px 1fr;
+                gap: 24px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                min-height: auto;
+            }
+            
+            .input-panel {
+                position: static;
+            }
+            
+            .container {
+                padding: 24px 16px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+            }
+            
+            .logo-text {
+                font-size: 18px;
+            }
+            
+            .input-panel, .output-panel {
+                border-radius: var(--radius-lg);
+                padding: 20px;
+            }
+            
+            .output-header {
+                padding: 16px 20px;
+            }
+            
+            .output-content {
+                padding: 20px;
+            }
+        }
+
+        /* Scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Selection colors */
+        ::selection {
+            background: rgba(0, 107, 180, 0.2);
+            color: var(--text-primary);
+        }
+
+        ::-moz-selection {
+            background: rgba(0, 107, 180, 0.2);
+            color: var(--text-primary);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">🔬</div>
+            <div class="logo-text">CTF Helper</div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            <span id="status-text">Ready</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="error-message" id="error-message"></div>
+        
+        <div class="main-grid">
+            <div class="input-panel">
+                <h2 class="panel-title">Generate Forensics Tool</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Quick Templates</label>
+                    <div class="quick-actions">
+                        <button class="quick-action" onclick="setPrompt('Create a comprehensive Python script to analyze network packet captures (PCAP files) and extract detailed connection information, including IP addresses, ports, protocols, and data transfer patterns')">🌐 Network Analysis</button>
+                        <button class="quick-action" onclick="setPrompt('Write a forensics tool to extract and analyze metadata from image files, including EXIF data, GPS coordinates, camera information, and detect potential steganography')">📸 Image Metadata</button>
+                        <button class="quick-action" onclick="setPrompt('Generate a comprehensive script to parse and analyze system log files, detect suspicious activities, and generate security reports')">📋 Log Analysis</button>
+                        <button class="quick-action" onclick="setPrompt('Create a steganography detection tool that can identify hidden data in files using various techniques including LSB, frequency analysis, and statistical methods')">🔍 Steganography Detection</button>
+                        <button class="quick-action" onclick="setPrompt('Write a file analysis tool that examines file headers, detects file types, identifies corrupted files, and extracts file signatures')">📁 File Analysis</button>
+                        <button class="quick-action" onclick="setPrompt('Create a memory forensics tool to analyze RAM dumps, extract running processes, network connections, and identify malicious activities')">💾 Memory Forensics</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="prompt">Describe the tool you need</label>
+                    <textarea id="prompt" class="form-input" placeholder="Example: Create a Python script that analyzes network traffic patterns and identifies suspicious connections in PCAP files. The tool should extract source/destination IPs, detect port scanning attempts, and generate a detailed report with visualizations..."></textarea>
+                </div>
+
+                <button class="btn-primary" onclick="submitPrompt()" id="generate-btn">
+                    Generate Tool
+                </button>
+            </div>
+
+            <div class="output-panel">
+                <div class="output-header">
+                    <div class="output-title">Generated Code</div>
+                    <button class="copy-btn" onclick="copyOutput()">Copy</button>
+                </div>
+                <div class="output-content" id="output">
+                    <div class="welcome-state">
+                        <div class="welcome-icon">🔧</div>
+                        <h3>Ready to generate forensics tools</h3>
+                        <p>Select a template or describe your own tool to get started with AI-powered code generation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRequest = null;
+        let responseCounter = 0;
+
+        function setPrompt(text) {
+            const promptInput = document.getElementById('prompt');
+            promptInput.value = text;
+            promptInput.focus();
+            // Auto-resize after setting text
+            promptInput.style.height = 'auto';
+            promptInput.style.height = (promptInput.scrollHeight) + 'px';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 6000);
+        }
+
+        function updateStatus(text, type = 'ready') {
+            document.getElementById('status-text').textContent = text;
+            const dot = document.querySelector('.status-dot');
+            const badge = document.querySelector('.status-badge');
+            
+            switch(type) {
+                case 'error':
+                    dot.style.background = '#ef4444';
+                    badge.style.background = '#fef2f2';
+                    badge.style.borderColor = '#fecaca';
+                    badge.style.color = '#dc2626';
+                    break;
+                case 'working':
+                    dot.style.background = '#f59e0b';
+                    badge.style.background = '#fffbeb';
+                    badge.style.borderColor = '#fed7aa';
+                    badge.style.color = '#d97706';
+                    break;
+                default:
+                    dot.style.background = '#10b981';
+                    badge.style.background = 'var(--primary-blue-light)';
+                    badge.style.borderColor = 'rgba(0, 107, 180, 0.2)';
+                    badge.style.color = 'var(--accent-blue)';
+            }
+        }
+
+        function showLoading() {
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <span>Generating your forensics tool...</span>
+                </div>
+            `;
+        }
+
+        function formatOutput(text) {
+            // Enhanced text formatting with better structure recognition
+            let formatted = text;
+            
+            // Bold section headers that start with capital letters and end with colons
+            formatted = formatted.replace(/^([A-Z][^:\n]*:)$/gm, '<strong>$1</strong>');
+            
+            // Bold numbered steps
+            formatted = formatted.replace(/^(\d+\.\s+[^:\n]*:?)/gm, '<strong>$1</strong>');
+            
+            // Bold installation/setup instructions
+            formatted = formatted.replace(/^(Installation|Setup|Usage|Requirements|Dependencies):/gm, '<strong>$1:</strong>');
+            
+            // Bold Python function definitions
+            formatted = formatted.replace(/^(def\s+\w+\([^)]*\):)/gm, '<strong>$1</strong>');
+            
+            // Bold class definitions
+            formatted = formatted.replace(/^(class\s+\w+[^:]*:)/gm, '<strong>$1</strong>');
+            
+            // Bold import statements
+            formatted = formatted.replace(/^(import\s+.*|from\s+.*\s+import\s+.*)/gm, '<strong>$1</strong>');
+            
+            // Bold file extensions and paths
+            formatted = formatted.replace(/(\.[a-z]{2,4}|\/[^\s]+)/g, '<code>$1</code>');
+            
+            // Bold command line instructions
+            formatted = formatted.replace(/^(\$\s+.*)/gm, '<code>$1</code>');
+            
+            return formatted;
+        }
+
+        async function submitPrompt() {
+            const prompt = document.getElementById('prompt').value.trim();
+            const generateBtn = document.getElementById('generate-btn');
+            
+            if (!prompt) {
+                showError('Please enter a tool description');
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            showLoading();
+            updateStatus('Generating...', 'working');
+
+            try {
+                currentRequest = fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const response = await currentRequest;
+                const data = await response.json();
+
+                if (data.success) {
+                    responseCounter++;
+                    const timestamp = new Date().toLocaleTimeString();
+                    const formattedOutput = formatOutput(escapeHtml(data.output));
+                    
+                    const output = document.getElementById('output');
+                    output.innerHTML = `
+                        <div class="response-block">
+                            <div class="response-header">
+                                Generated ${timestamp} • Response #${responseCounter}
+                            </div>
+                            <div class="response-content">${formattedOutput}</div>
+                        </div>
+                    `;
+                    
+                    // Smooth scroll to output
+                    output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                } else {
+                    showError('Error generating tool: ' + data.error);
+                    document.getElementById('output').innerHTML = `
+                        <div class="welcome-state">
+                            <div class="welcome-icon">⚠️</div>
+                            <h3>Generation failed</h3>
+                            <p>Please try again or check your request.</p>
+                        </div>
+                    `;
+                }
+                
+                updateStatus('Ready');
+                
+            } catch (error) {
+                updateStatus('Error', 'error');
+                showError('Failed to connect to backend: ' + error.message);
+                document.getElementById('output').innerHTML = `
+                    <div class="welcome-state">
+                        <div class="welcome-icon">🔌</div>
+                        <h3>Connection failed</h3>
+                        <p>Please check if the backend server is running on port 5000.</p>
+                    </div>
+                `;
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Tool';
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function copyOutput() {
+            const outputContent = document.querySelector('.response-content');
+            const copyBtn = document.querySelector('.copy-btn');
+            
+            if (outputContent) {
+                const text = outputContent.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
